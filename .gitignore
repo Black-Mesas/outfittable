@@ -1,0 +1,5 @@
+cookie.txt
+*.fit
+
+cmake-build-*
+.idea
