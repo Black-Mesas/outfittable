@@ -69,6 +69,8 @@ int main(int argc, char** argv) {
             printf("Downloads Roblox avatars to file.\n");
             cag_option_print(options, CAG_ARRAY_SIZE(options), stdout);
             return 0;
+        default:
+            break;
         }
     }
 
