@@ -14,8 +14,8 @@ typedef struct user {
 
 json_object* auth_requestJson (user_t *user, const char *url, const char* postData);
 
-user_t* auth_fromCookie ();
+user_t* auth_fromCookie (const char* filename);
 const char* auth_getWearing (user_t* user);
-const char* auth_getUserWearing (user_t* user, uintmax_t id);
+const char* auth_getUserWearing (uintmax_t id);
 
 #endif //OUTFITTABLE_AUTH_H

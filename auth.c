@@ -90,7 +90,16 @@ static char* auth_requestCrsfToken (user_t *user) {
 }
 
 json_object* auth_requestJson (user_t *user, const char *url, const char* postData) {
-    CURL *curl = user->curl;
+    CURL *curl;
+
+    if (user != NULL) {
+        curl = user->curl;
+    } else {
+        curl = curl_easy_init();
+        if (curl == NULL) {
+            return NULL;
+        }
+    }
     auth_rjwc_t tmp;
     json_tokener *tok = json_tokener_new();
     tmp.tok = tok;
@@ -103,7 +112,7 @@ json_object* auth_requestJson (user_t *user, const char *url, const char* postDa
     list = curl_slist_append(list, "Content-Type: application/json;charset=utf-8");
     list = curl_slist_append(list, "Accept: application/json");
 
-    if (*user->crsf != 0) {
+    if (user != NULL && *user->crsf != 0) {
         char crsfToken[30];
         sprintf(crsfToken, CRSF_HEADER, user->crsf);
         list = curl_slist_append(list, crsfToken);
@@ -120,10 +129,12 @@ json_object* auth_requestJson (user_t *user, const char *url, const char* postDa
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData);
     }
 
-    char cookie[1040];
-    sprintf(cookie, ".ROBLOSECURITY=%s;", user->cookie);
+    if (user != NULL) {
+        char cookie[1040];
+        sprintf(cookie, ".ROBLOSECURITY=%s;", user->cookie);
 
-    curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
+        curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
+    }
 
     curl_easy_perform(curl);
     curl_slist_free_all(list);
@@ -157,7 +168,7 @@ static int auth_getUserId (user_t *user) {
     return 0;
 }
 
-user_t* auth_fromCookie () {
+user_t* auth_fromCookie (const char* filename) {
     user_t* user = malloc(sizeof(user_t));
 
     if (user == NULL) {
@@ -175,10 +186,10 @@ user_t* auth_fromCookie () {
 
     {
         FILE* f;
-        fopen_s(&f, "cookie.txt", "r");
+        fopen_s(&f, filename, "r");
 
         if (f == NULL) {
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "No cookie!", "No cookie.txt! Create a file (same directory, cwd) with your cookie after in it (plain-text).", NULL);
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "No cookie!", "Create a cookie file and supply a cookie argument.", NULL);
             free(user);
             return NULL;
         }
@@ -189,7 +200,7 @@ user_t* auth_fromCookie () {
         printf("Cookie size: %ld bytes\n", size);
 
         if (size >= 1024) {
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "No cookie!", "Cookie too large.", NULL);
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "No cookie!", "Cookie too large (should be around 800-900). Make sure you are only copying the .ROBLOSECURITY", NULL);
             fclose(f);
             free(user);
             return NULL;
@@ -202,6 +213,9 @@ user_t* auth_fromCookie () {
         int c;
         while (!feof(f)) {
             c = fgetc(f);
+            if (isspace(c)) {
+                continue;
+            }
             *ptr = (char) c;
             ++ptr;
         }
@@ -246,10 +260,10 @@ const char* auth_getWearing (user_t* user) {
     return str;
 }
 
-const char* auth_getUserWearing (user_t* user, uintmax_t id) {
+const char* auth_getUserWearing (uintmax_t id) {
     char url[256];
     sprintf_s(url, 256, GET_USER_AVATAR, id);
-    json_object* obj = auth_requestJson(user, url, NULL);
+    json_object* obj = auth_requestJson(NULL, url, NULL);
     if (obj == NULL) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Avatar error", "Failed to get avatar.", NULL);
         return NULL;
