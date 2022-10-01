@@ -6,7 +6,7 @@
 
 const char* GET_AUTHENTICATED = "https://users.roblox.com/v1/users/authenticated";
 const char* GET_AVATAR = "https://avatar.roblox.com/v1/avatar";
-const char* GET_USER_AVATAR = "https://avatar.roblox.com/v1/users/%ld/avatar";
+const char* GET_USER_AVATAR = "https://avatar.roblox.com/v1/users/%llu/avatar";
 const char* CRSF_HEADER = "X-CSRF-TOKEN: %s";
 const char* CRSF_NODE = "data-token=\"";
 
